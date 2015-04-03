@@ -17,14 +17,16 @@ def login_required(func):
         return func(*args, **kwargs)
     return wrapper
 
+def with_auth(viewfunc, public):
+    if public is True:
+        return viewfunc
+    else:
+        return login_required(viewfunc)
+
 def custom_route(rule, **options):
     def decorator(f):
-        protected_f = None
-        if options.pop('public', False) is True:
-            protected_f = f
-        else:
-            protected_f = login_required(f)
-
+        is_public = options.pop('public', False)
+        protected_f = with_auth(f, is_public)
         endpoint = options.pop('endpoint', None)
         app.add_url_rule(rule, endpoint, protected_f, **options)
         return protected_f
